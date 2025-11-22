@@ -26,31 +26,31 @@ jobs:
         password: ${{ secrets.DOCKER_PASS }}
 
     - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKER_USER }}/blue-green-app:latest .
+      run: docker build -t ${{ secrets.DOCKER_USER }}/blue-green-app:latest .
 
     - name: Push Docker image
-      run: |
-        docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
+      run: docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
     # ============================================
-    # DETERMINAR TARGET SI ES PUSH (SIN INPUTS)
+    # SELECCIÓN DEL TARGET
     # ============================================
-    - name: Set target on push
-      if: ${{ github.event_name == 'push' }}
-      run: |
-        echo "target=GREEN" >> $GITHUB_ENV
 
-    - name: Set target on dispatch
-      if: ${{ github.event_name == 'workflow_dispatch' }}
-      run: |
-        echo "target=${{ github.event.inputs.target }}" >> $GITHUB_ENV
+    - name: Set target from push (default GREEN)
+      if: github.event_name == 'push'
+      run: echo "TARGET=GREEN" >> $GITHUB_ENV
+
+    - name: Set target from workflow_dispatch
+      if: github.event_name == 'workflow_dispatch'
+      run: echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
+
+    - name: Mostrar TARGET seleccionado
+      run: echo "Deploying to $TARGET"
 
     # ============================================
     # DEPLOY BLUE
     # ============================================
     - name: Deploy BLUE on server
-      if: env.target == 'BLUE'
+      if: env.TARGET == 'BLUE'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -67,7 +67,7 @@ jobs:
     # DEPLOY GREEN
     # ============================================
     - name: Deploy GREEN on server
-      if: env.target == 'GREEN'
+      if: env.TARGET == 'GREEN'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}

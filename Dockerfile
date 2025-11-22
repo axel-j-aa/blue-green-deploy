@@ -2,6 +2,7 @@ FROM nginx:alpine
 
 COPY app/ /usr/share/nginx/html/
 
-RUN touch /usr/share/nginx/html/current_version.txt
+# Copiar siempre un archivo por defecto
+RUN echo "UNKNOWN" > /usr/share/nginx/html/current_version.txt
 
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 80
