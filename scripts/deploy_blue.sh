@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-IMAGE="TU_DOCKER_USER/blue-green-app:latest"
+IMAGE="axeldjesus/blue-green-app:latest"
 
 echo "[BLUE] Haciendo pull de la imagen..."
 docker pull "$IMAGE"
