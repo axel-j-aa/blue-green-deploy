@@ -6,4 +6,4 @@ RUN touch /version
 
 ENV VERSION=UNKNOWN
 
-CMD sh -c "echo $VERSION > /version && nginx -g 'daemon off;'"
+CMD ["sh", "-c", "echo -n $VERSION > /version && exec nginx -g 'daemon off;'"]
