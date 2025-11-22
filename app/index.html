@@ -16,38 +16,37 @@
     p {
       font-size: 20px;
     }
-    #estado {
+    .blue {
+      color: #005eff;
+      font-weight: bold;
+    }
+    .green {
+      color: #008000;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <span id="estado"></span></p>
+  <p>Versión actual: <span id="version">Cargando...</span></p>
 
   <script>
-    // Detecta el puerto donde está servido el HTML
-    const port = window.location.port;
+    fetch("current_version.txt")
+      .then(response => response.text())
+      .then(version => {
+        version = version.trim().toUpperCase();
+        const span = document.getElementById("version");
 
-    let version = "";
-    let color = "";
-
-    if (port === "8081") {
-      version = "BLUE v1";
-      color = "blue";
-    } else if (port === "8082") {
-      version = "GREEN v1";
-      color = "green";
-    } else {
-      version = "DESCONOCIDO";
-      color = "black";
-    }
-
-    const estado = document.getElementById("estado");
-    estado.textContent = version;
-    estado.style.color = color;
+        if (version === "BLUE") {
+          span.textContent = "BLUE v1";
+          span.className = "blue";
+        } else if (version === "GREEN") {
+          span.textContent = "GREEN v1";
+          span.className = "green";
+        } else {
+          span.textContent = "DESCONOCIDO";
+        }
+      });
   </script>
-
 </body>
 </html>
