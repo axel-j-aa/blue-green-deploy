@@ -1,6 +1,7 @@
 FROM nginx:alpine
 
-COPY app/ /usr/share/nginx/html
+COPY app/ /usr/share/nginx/html/
 
+RUN touch /usr/share/nginx/html/current_version.txt
 
-EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
