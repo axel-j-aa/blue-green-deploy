@@ -1,6 +1,8 @@
 name: Blue-Green CI/CD
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       target:
@@ -9,30 +11,46 @@ on:
         default: "GREEN"
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Checkout repo
       uses: actions/checkout@v3
 
-    - name: Login Docker Hub
+    - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASS }}
 
-    - name: Build Image
+    - name: Build Docker image
       run: docker build -t ${{ secrets.DOCKER_USER }}/blue-green-app:latest .
 
-    - name: Push Image
+    - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
-    # OBTENER TARGET DESDE INPUT
-    - name: Set environment target
+    # ============================================
+    # SELECCIÓN DEL TARGET
+    # ============================================
+
+    - name: Set target from push (default GREEN)
+      if: github.event_name == 'push'
+      run: echo "TARGET=GREEN" >> $GITHUB_ENV
+
+    - name: Set target from workflow_dispatch
+      if: github.event_name == 'workflow_dispatch'
       run: echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
 
-    - name: Deploy via SSH
+    - name: Mostrar TARGET seleccionado
+      run: echo "Deploying to $TARGET"
+
+    # ============================================
+    # DEPLOY BLUE
+    # ============================================
+    - name: Deploy BLUE on server
+      if: env.TARGET == 'BLUE'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -42,11 +60,22 @@ jobs:
           cd /var/www/blue-green-deploy
           git pull origin main
           chmod +x scripts/*.sh
+          bash scripts/deploy_blue.sh
+          bash scripts/switch_to_blue.sh
 
-          if [ "$TARGET" = "BLUE" ]; then
-            bash scripts/deploy_blue.sh
-            bash scripts/switch_to_blue.sh
-          else
-            bash scripts/deploy_green.sh
-            bash scripts/switch_to_green.sh
-          fi
+    # ============================================
+    # DEPLOY GREEN
+    # ============================================
+    - name: Deploy GREEN on server
+      if: env.TARGET == 'GREEN'
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/blue-green-deploy
+          git pull origin main
+          chmod +x scripts/*.sh
+          bash scripts/deploy_green.sh
+          bash scripts/switch_to_green.sh
