@@ -14,15 +14,40 @@
       margin-bottom: 10px;
     }
     p {
-      font-size: 18px;
+      font-size: 20px;
     }
-    strong {
-      color: #008000; /* Verde */
+    #estado {
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
+
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <strong>GREEN v1</strong></p>
+  <p>Versión actual: <span id="estado"></span></p>
+
+  <script>
+    // Detecta el puerto donde está servido el HTML
+    const port = window.location.port;
+
+    let version = "";
+    let color = "";
+
+    if (port === "8081") {
+      version = "BLUE v1";
+      color = "blue";
+    } else if (port === "8082") {
+      version = "GREEN v1";
+      color = "green";
+    } else {
+      version = "DESCONOCIDO";
+      color = "black";
+    }
+
+    const estado = document.getElementById("estado");
+    estado.textContent = version;
+    estado.style.color = color;
+  </script>
+
 </body>
 </html>
