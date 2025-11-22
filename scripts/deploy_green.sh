@@ -3,17 +3,18 @@ set -e
 
 IMAGE="axeldjesus/blue-green-app:latest"
 
-echo "[GREEN] Haciendo pull de la imagen..."
+echo "[GREEN] Pulling image..."
 docker pull "$IMAGE"
 
-echo "[GREEN] Deteniendo contenedor anterior (si existe)..."
+echo "[GREEN] Stopping previous container..."
 docker stop app-green || true
 docker rm app-green || true
 
-echo "[GREEN] Levantando nuevo contenedor en puerto 8082..."
+echo "[GREEN] Starting GREEN container..."
 docker run -d \
   --name app-green \
   -p 8082:80 \
+  -e VERSION=GREEN \
   "$IMAGE"
 
-echo "[GREEN] Despliegue GREEN completado."
+echo "[GREEN] DONE."
