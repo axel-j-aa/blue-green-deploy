@@ -4,20 +4,49 @@
   <meta charset="UTF-8">
   <title>Colibrí - Blue Green</title>
   <style>
-    body { font-family: Arial; padding: 40px; background: #f4f4f4; }
-    strong { color: green; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 20px;
+    }
+    .blue {
+      color: #005eff;
+      font-weight: bold;
+    }
+    .green {
+      color: #008000;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <strong id="version">Cargando...</strong></p>
+  <p>Versión actual: <span id="version">Cargando...</span></p>
 
   <script>
-    // La variable VERSION es del contenedor (ENV)
-    fetch("/version")
-      .then(r => r.text())
-      .then(v => document.getElementById("version").textContent = v)
-      .catch(() => document.getElementById("version").textContent = "DESCONOCIDO");
+    fetch("current_version.txt")
+      .then(response => response.text())
+      .then(version => {
+        version = version.trim().toUpperCase();
+        const span = document.getElementById("version");
+
+        if (version === "BLUE") {
+          span.textContent = "BLUE v1";
+          span.className = "blue";
+        } else if (version === "GREEN") {
+          span.textContent = "GREEN v1";
+          span.className = "green";
+        } else {
+          span.textContent = "DESCONOCIDO";
+        }
+      });
   </script>
 </body>
 </html>
