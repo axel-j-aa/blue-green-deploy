@@ -33,11 +33,24 @@ jobs:
       run: |
         docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
-    # ============================
+    # ============================================
+    # DETERMINAR TARGET SI ES PUSH (SIN INPUTS)
+    # ============================================
+    - name: Set target on push
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        echo "target=GREEN" >> $GITHUB_ENV
+
+    - name: Set target on dispatch
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        echo "target=${{ github.event.inputs.target }}" >> $GITHUB_ENV
+
+    # ============================================
     # DEPLOY BLUE
-    # ============================
-    - name: Deploy BLUE on server and switch traffic
-      if: ${{ github.event.inputs.target == 'BLUE' }}
+    # ============================================
+    - name: Deploy BLUE on server
+      if: env.target == 'BLUE'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -50,11 +63,11 @@ jobs:
           bash scripts/deploy_blue.sh
           bash scripts/switch_to_blue.sh
 
-    # ============================
+    # ============================================
     # DEPLOY GREEN
-    # ============================
-    - name: Deploy GREEN on server and switch traffic
-      if: ${{ github.event.inputs.target == 'GREEN' }}
+    # ============================================
+    - name: Deploy GREEN on server
+      if: env.target == 'GREEN'
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
