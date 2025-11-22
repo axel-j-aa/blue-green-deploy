@@ -3,33 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <title>Colibrí - Blue Green</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 40px;
       background: #f4f4f4;
     }
-    h1 { color: #333; margin-bottom: 10px; }
-    p { font-size: 20px; }
-    .blue { color: #005eff; font-weight: bold; }
-    .green { color: #008000; font-weight: bold; }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 20px;
+    }
+    .blue {
+      color: #005eff;
+      font-weight: bold;
+    }
+    .green {
+      color: #008000;
+      font-weight: bold;
+    }
+    .unknown {
+      color: #555;
+      font-weight: bold;
+    }
   </style>
 </head>
+
 <body>
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <span id="version">Cargando...</span></p>
+  <p>Versión actual: <span id="version" class="unknown">Cargando...</span></p>
 
   <script>
     fetch("current_version.txt")
       .then(r => r.text())
       .then(v => {
         v = v.trim().toUpperCase();
-        const el = document.getElementById("version");
+        const span = document.getElementById("version");
 
-        if (v === "BLUE") { el.textContent = "BLUE v1"; el.className = "blue"; }
-        else if (v === "GREEN") { el.textContent = "GREEN v1"; el.className = "green"; }
-        else { el.textContent = "DESCONOCIDO"; }
+        if (v === "BLUE") {
+          span.textContent = "BLUE v1";
+          span.className = "blue";
+        } else if (v === "GREEN") {
+          span.textContent = "GREEN v1";
+          span.className = "green";
+        } else {
+          span.textContent = "DESCONOCIDO";
+          span.className = "unknown";
+        }
+      })
+      .catch(err => {
+        document.getElementById("version").textContent = "DESCONOCIDO";
       });
   </script>
+
 </body>
 </html>
