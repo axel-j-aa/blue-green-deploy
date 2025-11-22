@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Selecciona el entorno a desplegar (BLUE o GREEN)"
+        description: "Selecciona BLUE o GREEN"
         required: true
         default: "GREEN"
 
@@ -31,25 +31,26 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
-    # ============================================
-    # SELECCIÓN DEL TARGET
-    # ============================================
+    # ==========================
+    # DETERMINAR TARGET
+    # ==========================
 
-    - name: Set target from push (default GREEN)
+    - name: Set TARGET on push
       if: github.event_name == 'push'
       run: echo "TARGET=GREEN" >> $GITHUB_ENV
 
-    - name: Set target from workflow_dispatch
+    - name: Set TARGET on dispatch
       if: github.event_name == 'workflow_dispatch'
       run: echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
 
-    - name: Mostrar TARGET seleccionado
+    - name: Show selected TARGET
       run: echo "Deploying to $TARGET"
 
-    # ============================================
+    # ==========================
     # DEPLOY BLUE
-    # ============================================
-    - name: Deploy BLUE on server
+    # ==========================
+
+    - name: Deploy BLUE
       if: env.TARGET == 'BLUE'
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -61,12 +62,18 @@ jobs:
           git pull origin main
           chmod +x scripts/*.sh
           bash scripts/deploy_blue.sh
+
+          # ESCRIBIR VERSION EN ARCHIVO
+          docker exec app-blue sh -c "echo BLUE > /usr/share/nginx/html/current_version.txt"
+
           bash scripts/switch_to_blue.sh
 
-    # ============================================
+
+    # ==========================
     # DEPLOY GREEN
-    # ============================================
-    - name: Deploy GREEN on server
+    # ==========================
+
+    - name: Deploy GREEN
       if: env.TARGET == 'GREEN'
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -78,4 +85,8 @@ jobs:
           git pull origin main
           chmod +x scripts/*.sh
           bash scripts/deploy_green.sh
+
+          # ESCRIBIR VERSION EN ARCHIVO
+          docker exec app-green sh -c "echo GREEN > /usr/share/nginx/html/current_version.txt"
+
           bash scripts/switch_to_green.sh
