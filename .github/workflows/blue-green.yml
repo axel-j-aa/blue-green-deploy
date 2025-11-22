@@ -3,12 +3,19 @@ name: Blue-Green CI/CD
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Selecciona el entorno a desplegar (BLUE o GREEN)"
+        required: true
+        default: "GREEN"
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Checkout repo
       uses: actions/checkout@v3
 
@@ -26,7 +33,28 @@ jobs:
       run: |
         docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
+    # ============================
+    # DEPLOY BLUE
+    # ============================
+    - name: Deploy BLUE on server and switch traffic
+      if: ${{ github.event.inputs.target == 'BLUE' }}
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/blue-green-deploy
+          git pull origin main
+          chmod +x scripts/*.sh
+          bash scripts/deploy_blue.sh
+          bash scripts/switch_to_blue.sh
+
+    # ============================
+    # DEPLOY GREEN
+    # ============================
     - name: Deploy GREEN on server and switch traffic
+      if: ${{ github.event.inputs.target == 'GREEN' }}
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
