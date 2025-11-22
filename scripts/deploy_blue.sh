@@ -3,18 +3,20 @@ set -e
 
 IMAGE="axeldjesus/blue-green-app:latest"
 
-echo "[BLUE] Haciendo pull de la imagen..."
+echo "[BLUE] Pulling..."
 docker pull "$IMAGE"
 
-echo "[BLUE] Deteniendo contenedor anterior..."
+echo "[BLUE] Stopping old..."
 docker stop app-blue || true
 docker rm app-blue || true
 
-echo "[BLUE] Levantando contenedor BLUE..."
+echo "[BLUE] Creating BLUE container..."
 docker run -d \
   --name app-blue \
   -p 8081:80 \
-  -e VERSION=BLUE \
   "$IMAGE"
 
-echo "[BLUE] Listo."
+echo "[BLUE] Writing BLUE version..."
+docker exec app-blue sh -c "echo BLUE > /usr/share/nginx/html/current_version.txt"
+
+echo "[BLUE] Done."
