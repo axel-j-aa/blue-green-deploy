@@ -9,57 +9,26 @@
       padding: 40px;
       background: #f4f4f4;
     }
-    h1 {
-      color: #333;
-      margin-bottom: 10px;
-    }
-    p {
-      font-size: 20px;
-      margin-top: 20px;
-    }
-    .blue {
-      color: #005eff;
-      font-weight: bold;
-    }
-    .green {
-      color: #008000;
-      font-weight: bold;
-    }
-    .unknown {
-      color: #444;
-      font-weight: bold;
-    }
+    h1 { color: #333; margin-bottom: 10px; }
+    p { font-size: 20px; }
+    .blue { color: #005eff; font-weight: bold; }
+    .green { color: #008000; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <span id="version" class="unknown">Cargando...</span></p>
+  <p>Versión actual: <span id="version">Cargando...</span></p>
 
   <script>
     fetch("current_version.txt")
-      .then(response => {
-        if (!response.ok) return "DESCONOCIDO";
-        return response.text();
-      })
-      .then(text => {
-        const version = text.trim().toUpperCase();
-        const span = document.getElementById("version");
+      .then(r => r.text())
+      .then(v => {
+        v = v.trim().toUpperCase();
+        const el = document.getElementById("version");
 
-        if (version === "BLUE") {
-          span.textContent = "BLUE v1";
-          span.className = "blue";
-        } else if (version === "GREEN") {
-          span.textContent = "GREEN v1";
-          span.className = "green";
-        } else {
-          span.textContent = "DESCONOCIDO";
-          span.className = "unknown";
-        }
-      })
-      .catch(() => {
-        const span = document.getElementById("version");
-        span.textContent = "DESCONOCIDO";
-        span.className = "unknown";
+        if (v === "BLUE") { el.textContent = "BLUE v1"; el.className = "blue"; }
+        else if (v === "GREEN") { el.textContent = "GREEN v1"; el.className = "green"; }
+        else { el.textContent = "DESCONOCIDO"; }
       });
   </script>
 </body>
