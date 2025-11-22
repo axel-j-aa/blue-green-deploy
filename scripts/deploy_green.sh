@@ -16,7 +16,8 @@ docker run -d \
   -p 8082:80 \
   "$IMAGE"
 
-echo "[GREEN] Writing version file..."
+# ⬅️ AÑADIR ESTO
+echo "[GREEN] Setting GREEN version file..."
 docker exec app-green sh -c "echo GREEN > /usr/share/nginx/html/current_version.txt"
 
 echo "[GREEN] DONE."

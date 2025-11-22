@@ -16,7 +16,8 @@ docker run -d \
   -p 8081:80 \
   "$IMAGE"
 
-echo "[BLUE] Writing version file..."
+
+echo "[BLUE] Setting BLUE version file..."
 docker exec app-blue sh -c "echo BLUE > /usr/share/nginx/html/current_version.txt"
 
 echo "[BLUE] DONE."
