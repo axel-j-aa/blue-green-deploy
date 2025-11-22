@@ -24,15 +24,24 @@
       color: #008000;
       font-weight: bold;
     }
+    .unknown {
+      color: #444;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>Colibrí - Despliegue Blue-Green</h1>
-  <p>Versión actual: <span id="version">Cargando...</span></p>
+  <p>Versión actual: <span id="version" class="unknown">Cargando...</span></p>
 
   <script>
     fetch("current_version.txt")
-      .then(response => response.text())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("No existe current_version.txt");
+        }
+        return res.text();
+      })
       .then(version => {
         version = version.trim().toUpperCase();
         const span = document.getElementById("version");
@@ -45,8 +54,14 @@
           span.className = "green";
         } else {
           span.textContent = "DESCONOCIDO";
+          span.className = "unknown";
         }
+      })
+      .catch(() => {
+        document.getElementById("version").textContent = "DESCONOCIDO";
+        document.getElementById("version").className = "unknown";
       });
   </script>
+
 </body>
 </html>
