@@ -18,6 +18,8 @@ jobs:
 
     - name: Checkout repo
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -31,27 +33,51 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
-    # ==========================
-    # DETERMINAR TARGET
-    # ==========================
+    # ============================================================
+    # DETERMINAR TARGET (NO agrega v1)
+    # ============================================================
 
     - name: Set TARGET on push
-      if: github.event_name == 'push'
-      run: echo "TARGET=GREEN" >> $GITHUB_ENV
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        CURRENT=$(cat app/current_version.txt)
+        echo "Versión actual detectada: $CURRENT"
+
+        if [ "$CURRENT" = "BLUE" ]; then
+          echo "TARGET=BLUE" >> $GITHUB_ENV
+        else
+          echo "TARGET=GREEN" >> $GITHUB_ENV
+        fi
 
     - name: Set TARGET on dispatch
-      if: github.event_name == 'workflow_dispatch'
-      run: echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
 
     - name: Show selected TARGET
-      run: echo "Deploying to $TARGET"
+      run: |
+        echo "Deploying to environment: $TARGET"
 
-    # ==========================
+    # ============================================================
+    # ACTUALIZAR current_version.txt EN EL REPO (SOLO BLUE/GREEN)
+    # ============================================================
+
+    - name: Update current_version.txt in repo
+      run: |
+        echo "$TARGET" > app/current_version.txt
+
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add app/current_version.txt
+        git commit -m "Update version to $TARGET [skip ci]" || echo "Sin cambios"
+        git push || echo "Nada que subir"
+
+    # ============================================================
     # DEPLOY BLUE
-    # ==========================
+    # ============================================================
 
     - name: Deploy BLUE
-      if: env.TARGET == 'BLUE'
+      if: ${{ env.TARGET == 'BLUE' }}
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -63,18 +89,17 @@ jobs:
           chmod +x scripts/*.sh
           bash scripts/deploy_blue.sh
 
-          # ESCRIBIR VERSION EN ARCHIVO
+          # ESCRIBIR SOLO BLUE
           docker exec app-blue sh -c "echo BLUE > /usr/share/nginx/html/current_version.txt"
 
           bash scripts/switch_to_blue.sh
 
-
-    # ==========================
+    # ============================================================
     # DEPLOY GREEN
-    # ==========================
+    # ============================================================
 
     - name: Deploy GREEN
-      if: env.TARGET == 'GREEN'
+      if: ${{ env.TARGET == 'GREEN' }}
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -86,7 +111,7 @@ jobs:
           chmod +x scripts/*.sh
           bash scripts/deploy_green.sh
 
-          # ESCRIBIR VERSION EN ARCHIVO
+          # ESCRIBIR SOLO GREEN
           docker exec app-green sh -c "echo GREEN > /usr/share/nginx/html/current_version.txt"
 
           bash scripts/switch_to_green.sh
