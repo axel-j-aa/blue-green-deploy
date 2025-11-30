@@ -31,24 +31,32 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USER }}/blue-green-app:latest
 
-    # ==========================
-    # DETERMINAR TARGET
-    # ==========================
+    # ========================================
+    # DETERMINAR TARGET AUTOMÁTICO
+    # ========================================
 
-    - name: Set TARGET on push
+    - name: Determine target from push (auto swap)
       if: github.event_name == 'push'
-      run: echo "TARGET=GREEN" >> $GITHUB_ENV
+      run: |
+        CURRENT=$(cat app/current_version.txt)
+        echo "CURRENT VERSION = $CURRENT"
 
-    - name: Set TARGET on dispatch
+        if [ "$CURRENT" = "BLUE" ]; then
+          echo "TARGET=GREEN" >> $GITHUB_ENV
+        else
+          echo "TARGET=BLUE" >> $GITHUB_ENV
+        fi
+
+    - name: Determine target from dispatch (manual)
       if: github.event_name == 'workflow_dispatch'
       run: echo "TARGET=${{ github.event.inputs.target }}" >> $GITHUB_ENV
 
     - name: Show selected TARGET
       run: echo "Deploying to $TARGET"
 
-    # ==========================
+    # ========================================
     # DEPLOY BLUE
-    # ==========================
+    # ========================================
 
     - name: Deploy BLUE
       if: env.TARGET == 'BLUE'
@@ -63,15 +71,14 @@ jobs:
           chmod +x scripts/*.sh
           bash scripts/deploy_blue.sh
 
-          # ESCRIBIR VERSION EN ARCHIVO
           docker exec app-blue sh -c "echo BLUE > /usr/share/nginx/html/current_version.txt"
 
           bash scripts/switch_to_blue.sh
 
 
-    # ==========================
+    # ========================================
     # DEPLOY GREEN
-    # ==========================
+    # ========================================
 
     - name: Deploy GREEN
       if: env.TARGET == 'GREEN'
@@ -86,7 +93,6 @@ jobs:
           chmod +x scripts/*.sh
           bash scripts/deploy_green.sh
 
-          # ESCRIBIR VERSION EN ARCHIVO
           docker exec app-green sh -c "echo GREEN > /usr/share/nginx/html/current_version.txt"
 
           bash scripts/switch_to_green.sh
